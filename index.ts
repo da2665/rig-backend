@@ -37,7 +37,7 @@ app.get("/getMessages", async (req, res) => {
 
 app.post("/sendMessage", async (req, res) => {
   const request: chat.Message = {
-    id: 1,
+    id: "1",
     sender: req.query.sender as string,
     receiver: req.query.receiver as string,
     contents: req.query.contents as string,
