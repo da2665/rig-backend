@@ -4,18 +4,35 @@ import * as chat from "./types/chat";
 import { sendMessage } from "./methods/sendMessage";
 import { getMessages } from "./methods/getMessages";
 import cors from "cors";
+import AWS from "aws-sdk";
 
 dotenv.config();
 const app = express();
 
-app.use(cors({
+app.use(
+  cors({
     methods: ["GET", "POST"],
-    origin: "*"
-}));
+    origin: "*",
+  })
+);
+
+app.get("/getUpdates", async (req, res) => {
+  const params = {
+    Name: process.env.SSM_PARAMETER_NAME as string
+  }
+
+  const ssm = new AWS.SSM();
+  ssm.getParameter(params, (err, data) => {
+    if(err) console.error(err);
+    else {
+      console.log(data);
+    }
+  })
+});
 
 app.get("/getMessages", async (req, res) => {
-    res.send(await getMessages());
-})
+  res.send(await getMessages());
+});
 
 app.post("/sendMessage", async (req, res) => {
   const request: chat.Message = {
