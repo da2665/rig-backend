@@ -5,6 +5,7 @@ import { sendMessage } from "./methods/sendMessage";
 import { getMessages } from "./methods/getMessages";
 import cors from "cors";
 import AWS from "aws-sdk";
+AWS.config.update({region: "ap-southeast-2"});
 
 dotenv.config();
 const app = express();
@@ -16,7 +17,7 @@ app.use(
   })
 );
 
-app.get("/getUpdates", async (req, res) => {
+app.get("/getUpdates", (req, res) => {
   const params = {
     Name: process.env.SSM_PARAMETER_NAME as string
   }
@@ -25,7 +26,8 @@ app.get("/getUpdates", async (req, res) => {
   ssm.getParameter(params, (err, data) => {
     if(err) console.error(err);
     else {
-      console.log(data);
+      console.log(`Pulling version ${data.Parameter?.Value} from S3...`);
+      res.send(data.Parameter?.Value);
     }
   })
 });
