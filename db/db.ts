@@ -1,9 +1,19 @@
 import mysql from "mysql2";
-import dbConfig from "./db.config";
+import { getSecret } from "./getSecret";
+import dotenv from "dotenv";
 
-export default mysql.createConnection({
-    host: dbConfig.HOST,
-    user: dbConfig.USER,
-    password: dbConfig.PASSWORD,
-    database: dbConfig.DB
-})
+dotenv.config();
+
+export async function connect() {
+    const secret = await getSecret();
+
+    const config = {
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: secret.secret,
+        database: process.env.DB_NAME
+    }
+
+    const connection = mysql.createConnection(config);
+    return connection;
+}
