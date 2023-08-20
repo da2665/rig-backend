@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import * as chat from "./types/chat";
 import { sendMessage } from "./methods/sendMessage";
 import { getMessages } from "./methods/getMessages";
+import { generateId } from "./methods/generateId";
 import cors from "cors";
 import AWS from "aws-sdk";
 AWS.config.update({ region: process.env.REGION });
@@ -36,8 +37,11 @@ app.get("/getMessages", async (req, res) => {
 });
 
 app.post("/sendMessage", async (req, res) => {
+
+  console.log(await generateId());
+
   const request: chat.Message = {
-    id: "1",
+    id: await generateId(),
     sender: req.query.sender as string,
     receiver: req.query.receiver as string,
     contents: req.query.contents as string,

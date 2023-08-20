@@ -7,7 +7,7 @@ dotenv.config();
 const secret_name = process.env.DB_SECRET_NAME;
 
 const secretsManager = new SecretsManager({
-  region: "ap-southeast-2",
+  region: process.env.REGION,
 });
 
 export async function getSecret() {
