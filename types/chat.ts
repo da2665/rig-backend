@@ -3,4 +3,5 @@ export interface Message {
   sender: string;
   receiver: string;
   contents: string;
+  attachments: string[];
 }
