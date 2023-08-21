@@ -14,5 +14,6 @@ export async function sendMessage(message: chat.Message) {
         else resolve(JSON.stringify(res, null, 2));
       }
     );
+    connection.end();
   });
 }

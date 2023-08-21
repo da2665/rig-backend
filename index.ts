@@ -33,20 +33,19 @@ app.get("/getUpdates", (req, res) => {
 });
 
 app.get("/getMessages", async (req, res) => {
-  res.send(await getMessages());
+  res.send(JSON.stringify(await getMessages(), null, 2));
 });
 
 app.post("/sendMessage", async (req, res) => {
-
-  console.log(await generateId());
-
+  const messages = await getMessages() as chat.Message[];
   const request: chat.Message = {
-    id: await generateId(),
+    id: await generateId(messages.length),
     sender: req.query.sender as string,
     receiver: req.query.receiver as string,
     contents: req.query.contents as string,
+    attachments: req.query.attachments as string
   };
-  await sendMessage(request);
+  res.send(await sendMessage(request));
 });
 
 app.listen(process.env.API_PORT, () => {
