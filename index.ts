@@ -1,6 +1,6 @@
 import AWS from "aws-sdk";
 import dotenv from "dotenv";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import * as chat from "./types/chat";
 import { sendMessage } from "./methods/sendMessage";
 import { getMessages } from "./methods/getMessages";
@@ -16,7 +16,7 @@ const io = new Server({
   },
 });
 
-io.on("connection", (socket: any) => {
+io.on("connection", (socket: Socket) => {
   socket.on("Get Messages", async () => {
     try {
       const messages = await getMessages();
