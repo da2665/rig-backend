@@ -1,3 +1,3 @@
-export function generateId(currentId: number): number {
-    return currentId++;
+export async function generateId(currentId: number): Promise<number> {
+  return currentId++;
 }

@@ -1,10 +1,28 @@
-import connection from "../db/db";
+import { decryptMessages } from "./decryptMessages";
+import { connect } from "../db/db";
+
+let globalPool: any;
+
+async function getPoolQueryData() {
+  await connect().then((pool) => {
+    globalPool = pool;
+  });
+
+  if (!globalPool) {
+    throw new Error("Connection pool not initialized");
+  }
+  const connection = await globalPool.getConnection();
+  try {
+    const result = connection.query(`SELECT * from messages`);
+    return result;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
 
 export async function getMessages() {
-  return new Promise((resolve, reject) => {
-    connection.query(`SELECT * from messages`, (err, res) => {
-        if (err) reject(err);
-        else resolve(JSON.stringify(res, null, 2));
-      });
-  });
+  return await getPoolQueryData();
 }

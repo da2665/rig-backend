@@ -1,32 +1,55 @@
-import express from "express";
+import AWS from "aws-sdk";
 import dotenv from "dotenv";
+import { Server } from "socket.io";
 import * as chat from "./types/chat";
 import { sendMessage } from "./methods/sendMessage";
 import { getMessages } from "./methods/getMessages";
-import cors from "cors";
+import { generateId } from "./methods/generateId";
 
+AWS.config.update({ region: process.env.REGION });
 dotenv.config();
-const app = express();
 
-app.use(cors({
-    methods: ["GET", "POST"],
-    origin: "*"
-}));
-
-app.get("/getMessages", async (req, res) => {
-    res.send(await getMessages());
-})
-
-app.post("/sendMessage", async (req, res) => {
-  const request: chat.Message = {
-    id: 1,
-    sender: req.query.sender as string,
-    receiver: req.query.receiver as string,
-    contents: req.query.contents as string,
-  };
-  await sendMessage(request);
+const io = new Server({
+  cors: {
+    origin: ["http://localhost:3000"],
+    methods: ["GET", "POST"]
+  },
 });
 
-app.listen(process.env.API_PORT, () => {
-  console.info("Listening for requests...");
+io.on("connection", (socket: any) => {
+  socket.on("Get Messages", async () => {
+    try {
+      const messages = await getMessages();
+      socket.emit("Messages", JSON.parse(messages as string));
+      socket.emit("New Message", JSON.parse(messages as string));
+    } catch (error) {
+      console.error(error);
+    }
+  });
+
+  socket.on("Send Message", async (message: chat.Message) => {
+    try {
+      const messages = JSON.parse(
+        (await getMessages()) as string
+      ) as chat.Message[];
+
+      const request: chat.Message = {
+        id: await generateId(messages.length),
+        sender: message.sender,
+        receiver: message.receiver,
+        contents: message.contents,
+        attachments: message.attachments,
+      };
+
+      await sendMessage(request);
+    } catch (error) {
+      console.error(error);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    socket.removeAllListeners();
+  });
 });
+
+io.listen(process.env.API_PORT as any);
