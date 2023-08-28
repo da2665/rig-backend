@@ -27,16 +27,21 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("Send Message", async (message: chat.Message) => {
-    const messages = JSON.parse((await getMessages()) as unknown as string);
-    
-    const request: chat.Message = {
-      id: await generateId(messages.length),
-      sender: message.sender,
-      receiver: message.receiver,
-      contents: message.contents,
-      attachments: message.attachments,
-    };
-    socket.emit("New Message", await sendMessage(request));
+    try {
+      const messages = JSON.parse((await getMessages()) as unknown as string);
+
+      const request: chat.Message = {
+        id: await generateId(messages.length),
+        sender: message.sender,
+        receiver: message.receiver,
+        contents: message.contents,
+        attachments: message.attachments,
+      };
+      socket.emit("New Message", await sendMessage(request));
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   });
 });
 

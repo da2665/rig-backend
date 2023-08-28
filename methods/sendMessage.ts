@@ -7,7 +7,7 @@ export async function sendMessage(message: chat.Message) {
   const connection = await connect();
   return new Promise((resolve, reject) => {
     connection.query(
-      `INSERT INTO messages (id, sender, receiver, contents, attachments) VALUES ('${encrypted_message.id}', '${encrypted_message.sender}', '${encrypted_message.receiver}', '${encrypted_message.contents}', '${encrypted_message.attachments}');`,
+      `INSERT INTO messages (id, sender, receiver, contents, attachments) VALUES ('${encrypted_message.id}', '${encrypted_message.sender}', '${encrypted_message.receiver}', '${encrypted_message.contents}', COALESCE('${encrypted_message.attachments}', NULL));`,
       (err, res) => {
         if (err) reject(err);
         else resolve(res);
