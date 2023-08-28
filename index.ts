@@ -1,53 +1,55 @@
-import express from "express";
+import AWS from "aws-sdk";
 import dotenv from "dotenv";
+import { Server } from "socket.io";
 import * as chat from "./types/chat";
 import { sendMessage } from "./methods/sendMessage";
 import { getMessages } from "./methods/getMessages";
 import { generateId } from "./methods/generateId";
-import cors from "cors";
-import AWS from "aws-sdk";
+
 AWS.config.update({ region: process.env.REGION });
 dotenv.config();
-const app = express();
 
-app.use(
-  cors({
-    methods: ["GET", "POST"],
-    origin: "*",
-  })
-);
+const io = new Server({
+  cors: {
+    origin: ["http://localhost:3000"],
+    methods: ["GET", "POST"]
+  },
+});
 
-app.get("/getUpdates", (req, res) => {
-  const params = {
-    Name: process.env.SSM_PARAMETER_NAME as string,
-  };
-
-  const ssm = new AWS.SSM();
-  ssm.getParameter(params, (err, data) => {
-    if (err) console.error(err);
-    else {
-      console.log(`Pulling version ${data.Parameter?.Value} from S3...`);
-      res.send(data.Parameter?.Value);
+io.on("connection", (socket: any) => {
+  socket.on("Get Messages", async () => {
+    try {
+      const messages = await getMessages();
+      socket.emit("Messages", JSON.parse(messages as string));
+      socket.emit("New Message", JSON.parse(messages as string));
+    } catch (error) {
+      console.error(error);
     }
+  });
+
+  socket.on("Send Message", async (message: chat.Message) => {
+    try {
+      const messages = JSON.parse(
+        (await getMessages()) as string
+      ) as chat.Message[];
+
+      const request: chat.Message = {
+        id: await generateId(messages.length),
+        sender: message.sender,
+        receiver: message.receiver,
+        contents: message.contents,
+        attachments: message.attachments,
+      };
+
+      await sendMessage(request);
+    } catch (error) {
+      console.error(error);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    socket.removeAllListeners();
   });
 });
 
-app.get("/getMessages", async (req, res) => {
-  res.send(JSON.stringify(await getMessages(), null, 2));
-});
-
-app.post("/sendMessage", async (req, res) => {
-  const messages = await getMessages() as chat.Message[];
-  const request: chat.Message = {
-    id: await generateId(messages.length),
-    sender: req.query.sender as string,
-    receiver: req.query.receiver as string,
-    contents: req.query.contents as string,
-    attachments: req.query.attachments as string
-  };
-  res.send(await sendMessage(request));
-});
-
-app.listen(process.env.API_PORT, () => {
-  console.info("Listening for requests...");
-});
+io.listen(process.env.API_PORT as any);

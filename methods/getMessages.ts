@@ -1,14 +1,28 @@
-import * as chat from "../types/chat";
 import { decryptMessages } from "./decryptMessages";
 import { connect } from "../db/db";
 
+let globalPool: any;
+
+async function getPoolQueryData() {
+  await connect().then((pool) => {
+    globalPool = pool;
+  });
+
+  if (!globalPool) {
+    throw new Error("Connection pool not initialized");
+  }
+  const connection = await globalPool.getConnection();
+  try {
+    const result = connection.query(`SELECT * from messages`);
+    return result;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 export async function getMessages() {
-  const connection = await connect();
-  return new Promise((resolve, reject) => {
-    connection.query(`SELECT * from messages`, async (err: any, res: chat.Message[]) => {
-      if (err) reject(err);
-      else resolve(await decryptMessages(res as chat.Message[]));
-    });
-    connection.end();
-  })
+  return await getPoolQueryData();
 }
