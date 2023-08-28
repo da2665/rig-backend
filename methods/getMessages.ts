@@ -1,28 +1,17 @@
-import { decryptMessages } from "./decryptMessages";
 import { connect } from "../db/db";
+import { decryptMessages } from "./decryptMessages";
+import * as chat from "../types/chat";
 
-let globalPool: any;
-
-async function getPoolQueryData() {
-  await connect().then((pool) => {
-    globalPool = pool;
+export async function getMessages(): Promise<chat.Message[]> {
+  const connection = await connect();
+  return new Promise((resolve, reject) => {
+    connection.query(
+      `SELECT * from messages`,
+      (err: any, res: chat.Message[]) => {
+        if (err) reject(err);
+        else resolve(res);
+      }
+    );
+    connection.end();
   });
-
-  if (!globalPool) {
-    throw new Error("Connection pool not initialized");
-  }
-  const connection = await globalPool.getConnection();
-  try {
-    const result = connection.query(`SELECT * from messages`);
-    return result;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  } finally {
-    connection.release();
-  }
-}
-
-export async function getMessages() {
-  return await getPoolQueryData();
 }
