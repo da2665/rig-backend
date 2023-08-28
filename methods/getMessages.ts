@@ -7,7 +7,7 @@ export async function getMessages(): Promise<chat.Message[]> {
   return new Promise((resolve, reject) => {
     connection.query(
       `SELECT * from messages`,
-      async (err: any, res: chat.Message[]) => {
+      (err: any, res: chat.Message[]) => {
         if (err) reject(err);
         else resolve(res);
       }
