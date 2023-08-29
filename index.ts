@@ -18,8 +18,8 @@ const io = new Server({
 io.on("connection", (socket: Socket) => {
   socket.on("Get Messages", async () => {
     try {
-      const messages = JSON.parse((await getMessages()) as unknown as string);
-      socket.emit("Messages", messages);
+      const messages = JSON.parse(await getMessages() as string);
+      socket.emit("Initial Messages", messages);
     } catch (error) {
       console.error(error);
       throw error;
@@ -28,7 +28,7 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("Send Message", async (message: chat.Message) => {
     try {
-      const messages = JSON.parse((await getMessages()) as unknown as string);
+      const messages = JSON.parse(await getMessages() as string);
 
       const request: chat.Message = {
         id: await generateId(messages.length),
@@ -37,7 +37,7 @@ io.on("connection", (socket: Socket) => {
         contents: message.contents,
         attachments: message.attachments,
       };
-      socket.emit("New Message", await sendMessage(request));
+      socket.emit("New Message", JSON.parse(await sendMessage(request) as string));
     } catch (error) {
       console.error(error);
       throw error;

@@ -2,14 +2,14 @@ import { connect } from "../db/db";
 import { decryptMessages } from "./decryptMessages";
 import * as chat from "../types/chat";
 
-export async function getMessages(): Promise<chat.Message[]> {
+export async function getMessages() {
   const connection = await connect();
   return new Promise((resolve, reject) => {
     connection.query(
       `SELECT * from messages`,
-      (err: any, res: chat.Message[]) => {
+      async (err: any, res: any) => {
         if (err) reject(err);
-        else resolve(res);
+        else resolve(JSON.stringify(res));
       }
     );
     connection.end();
