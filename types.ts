@@ -1,7 +1,6 @@
 import * as mongo from "mongodb";
 
 export interface DirectMessage {
-  id: mongo.ObjectId;
   timestamp: number;
   from: string;
   to: string;

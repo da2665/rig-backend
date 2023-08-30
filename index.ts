@@ -33,10 +33,9 @@ io.on("connection", (socket: Socket) => {
     }
   });
 
-  socket.on("Send Message", async (message: rig.DirectMessage) => {
+  socket.on("Send Message", async (message: any) => {
     try {
       const request: rig.DirectMessage = {
-        id: new mongo.ObjectId(),
         timestamp: Date.now(),
         from: message.from,
         to: message.to,
