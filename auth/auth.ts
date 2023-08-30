@@ -1,38 +1,31 @@
 import { connect } from "../db/db";
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import * as rig from "../types";
 import * as mongo from "mongodb";
-import axios from "axios";
+import jwt from "jsonwebtoken";
 
-export async function login(request: any): Promise<any> {
-  const db = await connect() as any;
-  return new Promise((resolve, reject) => {
-    db.collection("users").findOne(
-      { email_address: request.email_address },
-      (err: any, user: rig.User) => {
-        if (err) {
-          console.error(`An error has occurred. User not found!\n${err}`);
-          reject(err);
-        } else {
-          bcrypt.compare(
-            request.password,
-            user.password,
-            async (err, isValid) => {
-              if (err || !isValid) {
-                console.error(
-                  `An error has occurred. Password doesn't match!\n${err}`
-                );
-                reject(err);
-              } else {
-                const token: string = await getToken();
-                console.log(`Logged user in!`);
-                resolve(JSON.stringify(token as string, null, 2));
-              }
-            }
-          );
-        }
+export async function login(request: any): Promise<string> {
+  const db = (await connect()) as any;
+  return new Promise(async (resolve, reject) => {
+    const user = await db
+      .collection("users")
+      .findOne({ email_address: request.email_address });
+
+    bcrypt.compare(request.password, user.password, (err, isValid) => {
+      if (err || !isValid) {
+        console.error(`An error has occurred. Password doesn't match!\n${err}`);
+        reject(err);
+      } else {
+        const token = jwt.sign(
+          {
+            username: user.username,
+          },
+          crypto.randomBytes(32).toString("hex")
+        );
+        resolve(token);
       }
-    );
+    });
   });
 }
 
@@ -43,7 +36,7 @@ export async function register(request: any): Promise<any> {
   return new Promise((resolve, reject) => {
     bcrypt.hash(request.password, 10, (err, hash) => {
       if (err) {
-        console.error(err);
+        console.error(`Error hashing password. ${err}`);
         reject(err);
       }
       user = {
@@ -59,12 +52,5 @@ export async function register(request: any): Promise<any> {
       };
       resolve(db.collection("users").insertOne(user));
     });
-  });
-}
-
-async function getToken(): Promise<string> {
-  
-  return new Promise((resolve, reject) => {
-    resolve("tism.wanker.com")
   });
 }
