@@ -1,5 +1,7 @@
+import * as mongo from "mongodb";
+
 export interface DirectMessage {
-  id: number;
+  id: mongo.ObjectId;
   timestamp: number;
   from: string;
   to: string;
@@ -8,21 +10,19 @@ export interface DirectMessage {
 }
 
 export interface User {
-  id: number;
+  id: mongo.ObjectId;
   firstName: string,
   lastName: string;
   email_address: string;
   username: string;
   password: string;
   profile_photo: string | null;
-  organisationId: number;
-  organisationName: string;
   isAuthenticated: boolean;
   messageHistory: DirectMessage[]
 }
 
 export interface Organisation {
-  id: number;
+  id: mongo.ObjectId;
   name: string;
   username: string;
   password: string;

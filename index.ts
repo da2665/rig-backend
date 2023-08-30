@@ -1,11 +1,11 @@
 import AWS from "aws-sdk";
 import dotenv from "dotenv";
 import { Server, Socket } from "socket.io";
-import * as chat from "./types/chat";
+import * as rig from "./types";
 import { sendMessage } from "./methods/sendMessage";
 import { getMessages } from "./methods/getMessages";
-import { generateId } from "./methods/generateId";
-
+import * as mongo from "mongodb";
+import { register, login } from "./auth/auth";
 AWS.config.update({ region: process.env.REGION });
 dotenv.config();
 
@@ -26,14 +26,13 @@ io.on("connection", (socket: Socket) => {
     }
   });
 
-  socket.on("Send Message", async (message: chat.Message) => {
+  socket.on("Send Message", async (message: rig.DirectMessage) => {
     try {
-      const messages = JSON.parse(await getMessages() as string);
-
-      const request: chat.Message = {
-        id: await generateId(messages.length),
-        sender: message.sender,
-        receiver: message.receiver,
+      const request: rig.DirectMessage = {
+        id: new mongo.ObjectId(),
+        timestamp: Date.now(),
+        from: message.from,
+        to: message.to,
         contents: message.contents,
         attachments: message.attachments,
       };
@@ -42,6 +41,14 @@ io.on("connection", (socket: Socket) => {
       console.error(error);
       throw error;
     }
+  });
+
+  socket.on("Login", async (request: any) => {
+    io.emit("Logged In", await login(request));
+  });
+
+  socket.on("Register", async (request: any) => {
+    io.emit("Registered", await register(request));
   });
 });
 

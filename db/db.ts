@@ -1,19 +1,15 @@
-import mysql from "mysql2";
 import { getSecret } from "./getSecret";
 import dotenv from "dotenv";
+import * as mongo from "mongodb";
 
 dotenv.config();
 
-export async function connect() {
-    const secret = await getSecret();
+export async function connect(): Promise<mongo.Db> {
+  const secret = await getSecret();
 
-    const config = {
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: secret.secret,
-        database: process.env.DB_NAME
-    }
+  const client: mongo.MongoClient = new mongo.MongoClient("mongodb://localhost");
+  await client.connect();
+  const db: mongo.Db = client.db("rigdb");
 
-    const connection = mysql.createConnection(config);
-    return connection;
+  return db;
 }
