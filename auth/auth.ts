@@ -23,6 +23,7 @@ export async function login(request: any): Promise<string> {
           },
           crypto.randomBytes(32).toString("hex")
         );
+        console.log(token);
         resolve(token);
       }
     });

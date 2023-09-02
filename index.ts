@@ -23,14 +23,8 @@ const io = new Server({
 });
 
 io.on("connection", (socket: Socket) => { 
-  socket.on("Get Messages", async () => {
-    try {
-      const messages = await getMessages();
-      io.emit("Initial Messages", messages);
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+  socket.on("Get Messages", async() => {
+    io.emit("Initial Messages", await getMessages())
   });
 
   socket.on("Send Message", async (message: any) => {
@@ -42,7 +36,10 @@ io.on("connection", (socket: Socket) => {
         contents: message.contents,
         attachments: message.attachments,
       };
-      io.emit("New Message", await sendMessage(request));
+      await sendMessage(request);
+      const messages: rig.DirectMessage[] = await getMessages() as rig.DirectMessage[];
+      io.emit("New Message", messages[messages.length-1]);
+      
     } catch (error) {
       console.error(error);
       throw error;
@@ -61,6 +58,10 @@ io.on("connection", (socket: Socket) => {
   socket.on("Register", async (request: any) => {
     io.emit("Registered", await register(request));
   });
+
+  socket.on("disconnect", () => {
+    console.log("A user has disconnected.");
+  })
 });
 
 io.listen(process.env.API_PORT as any);
